@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<style>
+    #textarea {
+        width: 100%;
+        min-height: 300px;
+    }
+</style>
+
+<textarea id="textarea" onchange="callTest()" >
+</textarea>
+<script
+        src="https://code.jquery.com/jquery-3.4.0.min.js"
+        integrity="sha256-BJeo0qm959uMBGb65z40ejJYGSgR7REI4+CW1fNKwOg="
+        crossorigin="anonymous"></script>
+<script type="application/javascript">
+
+
+    function callTest(){
+
+        $('#output').empty();
+
+        var variableMap = {};
+
+        var targetText = document.getElementById("textarea").value;
+
+        var errorFound = false;
+        // 1번 모든 if end if 를 가져온다.
+        var myRegexp = /if(.+)\n(.+)\nend if/g;
+        match = myRegexp.exec(targetText);
+        while (match != null) {
+            // matched text: match[0]
+            // match start: match.index
+            // capturing group n: match[n]
+            console.log("org", htmlEscape(match[1]));
+            var converted = replaceJavascritFunction(htmlEscape(match[1]));
+            console.log("converted", converted);
+
+            var variableRegexp  = /[a-zA-Z][a-zA-Z0-9_]*/g;
+            variableMatch = variableRegexp.exec(converted);
+            while (variableMatch != null) {
+                // console.log(variableMatch[0]);
+                if(!variableMap[variableMatch[0]]){
+                    var targetVariable = variableMatch[0] +"=1;";
+                    console.log(targetVariable);
+                    eval(targetVariable);
+                    variableMap[variableMatch[0]]=1;
+                }
+
+                variableMatch= variableRegexp.exec(converted);
+            }
+
+            try{
+
+                eval(converted);
+            }catch(e){
+                $('#output').append('<br>');
+                $('#output').append('<br>');
+                $('#output').append('this part is really stragne');
+                $('#output').append('<br>');
+                $('#output').append(htmlEscape(match[1]));
+                errorFound = true;
+            }
+            match = myRegexp.exec(targetText);
+        }
+
+
+        if(!errorFound){
+            $('#output').append('와우 수정할 포인트가 없네요');
+        }
+    }
+
+
+    function htmlEscape(str) {
+        return String(str)
+            .replace(/&amp;/g, '&' )
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, '\'')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>');
+    }
+
+    function replaceJavascritFunction(str){
+        return String(str)
+            .replace(/<>/g, '!=' )
+            .replace(/>>/g, '>')
+            .replace(/<</g, '<')
+            .replace(/like/g, '==')
+            .replace(/!!/g, '&&');
+    }
+
+    callTest();
+</script>
+
+<div>
+    수정하세요
+    <div id="output"></div>
+</div>
+
+</body>
+</html>
